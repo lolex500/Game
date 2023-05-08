@@ -14,9 +14,12 @@ loop1 = True
 screen = [800, 400]
 window = pygame.display.set_mode(screen, pygame.RESIZABLE)
 speed = 0
-jumpSpeed = 25
+jumpSpeed = 20
 startTime = time.time()
 fireTime = time.time() - 100
+timeChange = time.time()
+destructPlatform = []
+killPlatform = []
 
 
 # Icon and the name of the game
@@ -51,6 +54,8 @@ playerJump = pygame.transform.scale(pygame.image.load("graphics/playerJump.png")
 player_rect = player.get_rect(bottomleft=(50, 0))
 platform = pygame.transform.scale(pygame.image.load("graphics/pI.png"), (160, 40)).convert_alpha()
 platform_rect = platform.get_rect()
+platformD = pygame.transform.scale(pygame.image.load("graphics/pD.png"), (40, 160)).convert_alpha()
+platformD_rect = platform.get_rect()
 bg = pygame.transform.scale(pygame.image.load("graphics/bgI.png"), (800 * 12, 35 * 12)).convert_alpha()
 bg_rect = bg.get_rect(topleft=(-50, 0))
 platform1 = pygame.transform.scale(pygame.image.load("graphics/p1.png"), (160, 40)).convert_alpha()
@@ -66,7 +71,7 @@ equipped = pygame.transform.scale(pygame.image.load("graphics/equipped.png"), (7
 # Music and sound
 song = 0
 mixer.init()
-musicVolume = 100
+musicVolume = 0.5
 mixer.music.load("sound/starbound.mp3")
 mixer.music.set_volume(musicVolume)
 mixer.music.play(-1)
@@ -89,12 +94,46 @@ class Shoot:
 
 
 def fire():
-    global bullet
+    global bullet, destructPlatform, killPlatform
     Time = time.time()-fireTime
-    if Shoot.left:
-        window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y))
-    if Shoot.right:
-        window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y))
+
+    # Revolver
+    if Gear.l1ce:
+        if Shoot.left:
+            window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y))
+            for i in destructPlatform:
+                if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x-(Time*800), bullet_rect.y))]):
+                    pass
+                else:
+                    destructPlatform.remove(i)
+            for i in killPlatform:
+                if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x-(Time*800), bullet_rect.y))]):
+                    pass
+                else:
+                    killPlatform.remove(i)
+        if Shoot.right:
+            window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y))
+            for i in destructPlatform:
+                if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x+(Time*800), bullet_rect.y))]):
+                    pass
+                else:
+                    destructPlatform.remove(i)
+            for i in killPlatform:
+                if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x+(Time*800), bullet_rect.y))]):
+                    pass
+                else:
+                    killPlatform.remove(i)
+
+    # Shotgun
+    # elif Gear.l# lvl. number where shotgun got #ce:
+    #     if Shoot.left:
+    #         window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y+(Time*200)))
+    #         window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y))
+    #         window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y-(Time*200)))
+    #     if Shoot.right:
+    #         window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y+(Time*200)))
+    #         window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y))
+    #         window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y-(Time*200)))
 
 
 # Equipped gear
@@ -126,7 +165,7 @@ def save_object(obj):
 
 
 # Load saved object or create new ones
-globals().update({"introC": False, "l1C": False, "l2C": False, "l3C": False, "l4C": False, "l5C": False, "l6C": False, "l7C": False, "l8C": False, "l9C": False, "l10C": False, "l1c": False, "l2c": False, "l3c": False, "l4c": False, "l5c": False, "l6c": False, "l7c": False, "l8c": False, "l9c": False, "l10c": False, "l1ce": False, "l2ce": False, "l3ce": False, "l4ce": False, "l5ce": False, "l6ce": False, "l7ce": False, "l8ce": False, "l9ce": False, "l10ce": False, "jump": False})
+globals().update({"introC": False, "l1C": False, "l2C": False, "l3C": False, "l4C": False, "l5C": False, "l6C": False, "l7C": False, "l8C": False, "l9C": False, "l10C": False, "l1c": False, "l2c": False, "l3c": False, "l4c": False, "l5c": False, "l6c": False, "l7c": False, "l8c": False, "l9c": False, "l10c": False, "jump": False})
 try:
     with open("saves/data.pickle", "rb") as f:
         savedObject = pickle.load(f)
@@ -138,6 +177,7 @@ try:
         print(ex, "Hopefully not a problem")
 except Exception as ex:
     print(ex, "(Not a real problem, 99% sure)")
+mixer.music.set_volume(musicVolume)
 
 
 # Post credit scene
@@ -147,7 +187,7 @@ def pcs():
 
 # The screen to view collected items
 def collectibles():
-    global ID, locked, l1c, l2c, l3c, l4c, l5c, l6c, l7c, l8c, l9c, l10c, back, secret, gunC, equipped
+    global ID, locked, l1c, l2c, l3c, l4c, l5c, l6c, l7c, l8c, l9c, l10c, back, secret, gunC, equipped, timeChange
     window.fill("Light Blue")
     back_rect = back.get_rect(center=(200, 50))
     secret_rect = secret.get_rect(center=(600, 50))
@@ -173,8 +213,14 @@ def collectibles():
     if l1c:
         if Gear.l1ce:
             window.blit(equipped, equipped.get_rect(center=C1.center))
-        elif Buttons.mouse and C1.collidepoint(pygame.mouse.get_pos()):
-            Gear.l1ce = True
+        if C1.collidepoint(pygame.mouse.get_pos()):
+            if Buttons.mouse and time.time()-timeChange >= 0.5:
+                if not Gear.l1ce:
+                    Gear.l1ce = True
+                else:
+                    Gear.l1ce = False
+                Gear.l2ce = False
+                timeChange = time.time()
         window.blit(gunC, C1)
     else:
         window.blit(locked, locked.get_rect(center=C1.center))
@@ -182,6 +228,14 @@ def collectibles():
     if l2c:
         if Gear.l2ce:
             window.blit(equipped, equipped.get_rect(center=C2.center))
+        if C2.collidepoint(pygame.mouse.get_pos()):
+            if Buttons.mouse and time.time()-timeChange >= 0.5:
+                if not Gear.l2ce:
+                    Gear.l2ce = True
+                else:
+                    Gear.l2ce = False
+                Gear.l1ce = False
+                timeChange = time.time()
         window.blit(gunC, C2)
     else:
         window.blit(locked, locked.get_rect(center=C2.center))
@@ -245,12 +299,28 @@ def collectibles():
 
 # The settings for important things
 def settings():
-    pass
+    global musicVolume
+    window.fill("Light blue")
+    sliderButton = (100, 300)
+    mouse = pygame.mouse.get_pos()
+    sliderPos = musicVolume * 580
+    if Buttons.mouse and sliderButton[0]+10 <= mouse[0] <= sliderButton[0]+590 and sliderButton[1] <= mouse[1] <= sliderButton[1]+50:
+        sliderPos = mouse[0]-110
+        if musicVolume != round(sliderPos/580, 2):
+            pass
+            # Button click sound
+        musicVolume = round(sliderPos/580, 2)
+    sliderPlacement = (sliderPos + sliderButton[0], sliderButton[1], 20, 50)
+    pygame.draw.rect(window, (200, 200, 200), pygame.Rect((sliderButton[0], sliderButton[1], 600, 50)))
+    pygame.draw.rect(window, (100, 100, 100), pygame.Rect(sliderPlacement))
+    mixer.music.set_volume(musicVolume)
+    textMusicVolume = text_font.render(("Music Volume: " + str(round(musicVolume * 100)) + "%"), True, (50, 50, 50))
+    window.blit(textMusicVolume, (100, sliderButton[1]+10))
 
 
 # The menu where you select levels, collectibles, or settings
 def menu():
-    global ID, locked, unlocked, introC, l1C, l2C, l3C, l4C, l5C, l6C, l7C, l8C, l9C, l10C, setting, collectible, song
+    global ID, locked, unlocked, introC, l1C, l2C, l3C, l4C, l5C, l6C, l7C, l8C, l9C, l10C, setting, collectible, song, destructPlatform, killPlatform
     if song != 0:
         song = 0
         mixer.music.stop()
@@ -290,6 +360,8 @@ def menu():
     if Buttons.mouse:
         if Ui.collidepoint(pygame.mouse.get_pos()):
             ID = 0
+            destructPlatform = [[400, 200], [500, 100]]
+            killPlatform = [[700, 200]]
 
     if introC:
         window.blit(unlocked, U1)
@@ -396,7 +468,7 @@ def menu():
 
 # The intro level
 def intro():
-    global temp, introC, ID,  speed, jumpSpeed, jump, gear
+    global temp, introC, ID,  speed, jumpSpeed, jump, Gear, destructPlatform, killPlatform
     platforms = [[30, 350], [190, 350], [700, 300], [400, 250]]
     if temp == 0:
         if player_rect.bottom < 400:
@@ -420,12 +492,14 @@ def intro():
         for i in platforms:
             window.blit(platform, (platform_rect.x+i[0], platform_rect.y+i[1]))
 
-        if jumpShoesC.get_rect(topleft=(platform_rect.x+250, platform_rect.y+200)).colliderect(player_rect):
-            jump = True
-        if jump:
+        # Shoes for jumping
+        if not jump:
+            if jumpShoesC.get_rect(topleft=(platform_rect.x+250, platform_rect.y+200)).colliderect(player_rect):
+                jump = True
+        else:
             tempText = text_font.render("Collectible found, you can now jump!", True, "Black")
             window.blit(tempText, tempText.get_rect(center=(400, 50)))
-        fire()
+
 
         # Win conditions
         window.blit(fin, (platform_rect.x+1000, platform_rect.y))
@@ -436,14 +510,21 @@ def intro():
         # Loss conditions
         if player_rect.bottom >= 400:
             temp = 2
+        for i in killPlatform:
+            if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).colliderect(player_rect):
+                temp = 2
 
     # When the level is over, check if the player wants the next level or the menu
     elif temp == 1:
         if Buttons.mouse:
             if pygame.mouse.get_pos()[0] <= screen[0]/2:
                 ID = -1
+                destructPlatform = []
+                killPlatform = []
             else:
                 ID = 1
+                destructPlatform = []
+                killPlatform = []
             temp = 0
             player_rect.bottomleft = (50, 0)
             platform_rect.topleft = (0, 0)
@@ -462,8 +543,12 @@ def intro():
         if Buttons.mouse:
             if pygame.mouse.get_pos()[0] <= screen[0]/2:
                 ID = -1
+                destructPlatform = []
+                killPlatform = []
             else:
                 ID = 0
+                destructPlatform = [[400, 200], [500, 100]]
+                killPlatform = [[700, 200]]
             temp = 0
             player_rect.bottomleft = (50, 0)
             platform_rect.topleft = (0, 0)
@@ -501,13 +586,13 @@ def l1():
             window.blit(player1, player_rect)
         for i in platforms:
             window.blit(platform1, (platform_rect.x+i[0], platform_rect.y+i[1]))
-        fire()
+
 
         # Collectible
-        if gunC.get_rect(topleft=(platform_rect.x+500, platform_rect.y+100)).colliderect(player_rect):
-            l1c = True
-            Gear.l1ce = True
         if not l1c:
+            if gunC.get_rect(topleft=(platform_rect.x+500, platform_rect.y+100)).colliderect(player_rect):
+                l1c = True
+                Gear.l1ce = True
             window.blit(gunC, (platform_rect.x+500, platform_rect.y+100))
         else:
             tempText = text_font.render("Collectible found!", True, "Black")
@@ -536,7 +621,7 @@ def l1():
             bg_rect.topleft = (-50, 0)
         else:
             window.fill("Light Blue")
-            tempText = text_font.render("Intro Complete!", True, "Black")
+            tempText = text_font.render("Level 1 Complete!", True, "Black")
             window.blit(tempText, tempText.get_rect(center=(400, 80)))
             tempText = text_font.render("Main menu", True, "Black")
             window.blit(tempText, tempText.get_rect(center=(200, 200)))
@@ -629,7 +714,7 @@ def l10():
 
 def end_credits():
     global ID, platform_rect, song
-    stop = 1700
+    stop = 2750
     if song != 1:
         song = 1
         mixer.music.stop()
@@ -662,18 +747,50 @@ def end_credits():
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1250)))
     tempText = text_font.render("Viktor Lennartsson", True, "White")
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1300)))
-    if platform_rect.y >= -(stop-200):
+    tempText = text_font.render("HR Department", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1400)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1450)))
+    tempText = text_font.render("Risk Management Department", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1550)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1600)))
+    tempText = text_font.render("Lead Rizz Management", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1700)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1750)))
+    tempText = text_font.render("The Rizzler", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1850)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+1900)))
+    tempText = text_font.render("Special thanks to:", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2000)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2050)))
+    tempText = text_font.render("Thanks for motivating me <3!", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2150)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2200)))
+    tempText = text_font.render("People we unfortunately lost during the way", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2300)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2350)))
+    tempText = text_font.render("PR Department", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2450)))
+    tempText = text_font.render("Viktor Lennartsson", True, "White")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2500)))
+    if platform_rect.y >= -(stop-200)*2:
         platform_rect.y -= 1
     if Buttons.space:
         ID = -1
         platform_rect.topleft = (0, 0)
     tempText = text_font.render("Press space to return to menu", True, "Pink")
-    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y+stop)))
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+stop)))
 
 
 # The main play function,take cares of which levels or menus are open
 def play():
-    global loop1, ID, temp, speed, jumpSpeed, fireTime
+    global loop1, ID, temp, speed, jumpSpeed, fireTime, destructPlatform
 
     # Button presses
     for event in pygame.event.get():
@@ -731,10 +848,11 @@ def play():
         player_rect.y -= speed
         if speed != 0:
             speed -= 1
+        if Buttons.w and Gear.l9ce:
+            speed = jumpSpeed/2
 
-        print(time.time()-fireTime)
         if Buttons.space:
-            if time.time()-fireTime > 1 and Gear.l1ce:
+            if time.time()-fireTime > 1:
                 if pygame.mouse.get_pos()[0] <= player_rect.x:
                     Shoot.left = True
                     Shoot.right = False
@@ -779,6 +897,19 @@ def play():
     elif ID == 11:
         end_credits()
 
+    if ID in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] and temp == 0:
+        fire()
+        for i in destructPlatform:
+            window.blit(platform, (platform_rect.x+i[0], platform_rect.y+i[1]))
+        for i in killPlatform:
+            window.blit(platformD, (platform_rect.x+i[0], platform_rect.y+i[1]))
+
+    for i in destructPlatform:
+        if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline(player_rect.bottomleft, player_rect.bottomright):
+            player_rect.bottom = platform_rect.y+i[1]
+            if Buttons.w and jump:
+                speed = jumpSpeed
+
 
 # Start the mayhem
 while loop1:
@@ -788,7 +919,6 @@ while loop1:
 
 
 # Save things
-print(Gear.l1ce)
 toBeSaved = {"introC": introC, "l1C": l1C, "l2C": l2C,
              "l3C": l3C, "l4C": l4C, "l5C": l5C, "l6C": l6C,
              "l7C": l7C, "l8C": l8C, "l9C": l9C, "l10C": l10C,
@@ -797,7 +927,7 @@ toBeSaved = {"introC": introC, "l1C": l1C, "l2C": l2C,
              "l9c": l9c, "l10c": l10c, "jump": jump, "l1ce": Gear.l1ce,
              "l2ce": Gear.l2ce, "l3ce": Gear.l3ce, "l4ce": Gear.l4ce,
              "l5ce": Gear.l5ce, "l6ce": Gear.l6ce, "l7ce": Gear.l7ce,
-             "l8ce": Gear.l8ce, "l9ce": Gear.l9ce, "l10ce": Gear.l10ce}
+             "l8ce": Gear.l8ce, "l9ce": Gear.l9ce, "l10ce": Gear.l10ce, "musicVolume": musicVolume}
 print(toBeSaved)
 save_object(toBeSaved)
 sys.exit()
