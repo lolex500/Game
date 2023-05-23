@@ -20,6 +20,7 @@ fireTime = time.time() - 100
 timeChange = time.time()
 destructPlatform = []
 killPlatform = []
+grass = 0
 
 
 # Icon and the name of the game
@@ -66,6 +67,11 @@ player1Jump = pygame.transform.scale(pygame.image.load("graphics/player1jump.png
 bullet = pygame.transform.scale(pygame.image.load("graphics/bullet.png"), (22, 6)).convert_alpha()
 bullet_rect = bullet.get_rect()
 equipped = pygame.transform.scale(pygame.image.load("graphics/equipped.png"), (75, 75)).convert_alpha()
+bg9 = pygame.transform.scale(pygame.image.load("graphics/bg9.png"), (800 * 12, 35 * 12)).convert_alpha()
+bg9text = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (800 * 12, 35 * 12)).convert_alpha()
+grass1 = pygame.transform.scale(pygame.image.load("graphics/grass1.png"), (16*8, 16*4)).convert_alpha()
+grass2 = pygame.transform.scale(pygame.image.load("graphics/grass2.png"), (16*8, 16*4)).convert_alpha()
+grass3 = pygame.transform.scale(pygame.image.load("graphics/grass3.png"), (16*8, 16*4)).convert_alpha()
 
 
 # Music and sound
@@ -165,7 +171,14 @@ def save_object(obj):
 
 
 # Load saved object or create new ones
-globals().update({"introC": False, "l1C": False, "l2C": False, "l3C": False, "l4C": False, "l5C": False, "l6C": False, "l7C": False, "l8C": False, "l9C": False, "l10C": False, "l1c": False, "l2c": False, "l3c": False, "l4c": False, "l5c": False, "l6c": False, "l7c": False, "l8c": False, "l9c": False, "l10c": False, "jump": False})
+globals().update({"introC": False, "l1C": False, "l2C": False,
+                  "l3C": False, "l4C": False, "l5C": False,
+                  "l6C": False, "l7C": False, "l8C": False,
+                  "l9C": False, "l10C": False, "l1c": False,
+                  "l2c": False, "l3c": False, "l4c": False,
+                  "l5c": False, "l6c": False, "l7c": False,
+                  "l8c": False, "l9c": False, "l10c": False,
+                  "jump": False})
 try:
     with open("saves/data.pickle", "rb") as f:
         savedObject = pickle.load(f)
@@ -476,7 +489,7 @@ def intro():
 
         # Collisions with platforms
         for i in platforms:
-            if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline(player_rect.bottomleft, player_rect.bottomright):
+            if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline((player_rect.bottomleft[0]+24, player_rect.bottomleft[1]), (player_rect.bottomright[0]-24, player_rect.bottomright[1])):
                 player_rect.bottom = platform_rect.y+i[1]
                 if Buttons.w and jump:
                     speed = jumpSpeed
@@ -499,7 +512,6 @@ def intro():
         else:
             tempText = text_font.render("Collectible found, you can now jump!", True, "Black")
             window.blit(tempText, tempText.get_rect(center=(400, 50)))
-
 
         # Win conditions
         window.blit(fin, (platform_rect.x+1000, platform_rect.y))
@@ -572,7 +584,7 @@ def l1():
 
         # Collisions with platforms
         for i in platforms:
-            if platform1.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline(player_rect.bottomleft, player_rect.bottomright):
+            if platform1.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline((player_rect.bottomleft[0]+24, player_rect.bottomleft[1]), (player_rect.bottomright[0]-24, player_rect.bottomright[1])):
                 player_rect.bottom = platform_rect.y+i[1]
                 if Buttons.w:
                     speed = jumpSpeed
@@ -586,7 +598,12 @@ def l1():
             window.blit(player1, player_rect)
         for i in platforms:
             window.blit(platform1, (platform_rect.x+i[0], platform_rect.y+i[1]))
-
+            if 0 <= grass < 1:
+                window.blit(grass1, grass1.get_rect(midbottom=(platform_rect.x+i[0]+80, platform_rect.y+i[1])))
+            elif 1 <= grass < 2:
+                window.blit(grass2, grass2.get_rect(midbottom=(platform_rect.x+i[0]+80, platform_rect.y+i[1])))
+            else:
+                window.blit(grass3, grass3.get_rect(midbottom=(platform_rect.x+i[0]+80, platform_rect.y+i[1])))
 
         # Collectible
         if not l1c:
@@ -699,10 +716,89 @@ def l8():
 
 
 def l9():
-    global ID, l9C
-    window.fill("Red")
-    ID = -1
-    l9C = True
+    global temp, l9C, l9c, ID, speed, jumpSpeed
+    platforms = [[30, 375], [330, 375], [630, 375], [930, 375], [1230, 375], [1530, 375], [1830, 375], [2130, 375], [2430, 375], [2730, 375], [3030, 375], [3330, 375], [3630, 375], [3930, 375]]
+    if temp == 0:
+        if player_rect.bottom < 400:
+            player_rect.bottom += 8
+
+        # Collisions with platforms
+        for i in platforms:
+            if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline(player_rect.bottomleft, player_rect.bottomright):
+                player_rect.bottom = platform_rect.y+i[1]
+                if Buttons.w:
+                    speed = jumpSpeed
+
+        # Graphics
+        window.blit(bg9, bg_rect)
+        window.blit(bg9text, (bg_rect[0]*2, 0))
+        if speed != 0:
+            window.blit(player1Jump, player_rect)
+        else:
+            window.blit(player1, player_rect)
+        for i in platforms:
+            window.blit(platform, (platform_rect.x+i[0], platform_rect.y+i[1]))
+
+
+        # Collectible
+        if not l9c:
+            if gunC.get_rect(topleft=(platform_rect.x+900, platform_rect.y+100)).colliderect(player_rect):
+                l9c = True
+                Gear.l1ce = True
+            window.blit(gunC, (platform_rect.x+900, platform_rect.y+100))
+        else:
+            tempText = text_font.render("Collectible found!", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 50)))
+
+        # Win conditions
+        window.blit(fin, (platform_rect.x+4000, platform_rect.y))
+        if player_rect.x-platform_rect.x >= 4000:
+            l9C = True
+            temp = 1
+
+        # Loss conditions
+        if player_rect.bottom >= 400:
+            temp = 2
+
+    # When the level is over, check if the player wants the next level or the menu
+    elif temp == 1:
+        if Buttons.mouse:
+            if pygame.mouse.get_pos()[0] <= screen[0]/2:
+                ID = -1
+            else:
+                ID = 10
+            temp = 0
+            player_rect.bottomleft = (50, 0)
+            platform_rect.topleft = (0, 0)
+            bg_rect.topleft = (-50, 0)
+        else:
+            window.fill("Light Blue")
+            tempText = text_font.render("Level 9 Complete!", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 80)))
+            tempText = text_font.render("Main menu", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(200, 200)))
+            tempText = text_font.render("Next Level", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(600, 200)))
+
+    # Restart level or return to menu after loss
+    else:
+        if Buttons.mouse:
+            if pygame.mouse.get_pos()[0] <= screen[0]/2:
+                ID = -1
+            else:
+                ID = 9
+            temp = 0
+            player_rect.bottomleft = (50, 0)
+            platform_rect.topleft = (0, 0)
+            bg_rect.topleft = (0, 0)
+        else:
+            window.fill("Light Blue")
+            tempText = text_font.render("Level failed", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 80)))
+            tempText = text_font.render("Main menu", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(200, 200)))
+            tempText = text_font.render("Restart Level", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(600, 200)))
 
 
 def l10():
@@ -784,13 +880,20 @@ def end_credits():
     if Buttons.space:
         ID = -1
         platform_rect.topleft = (0, 0)
+    tempText = text_font.render("Thank you for playing", True, "Pink")
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+stop+25)))
     tempText = text_font.render("Press space to return to menu", True, "Pink")
-    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+stop)))
+    window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+stop-25)))
 
 
 # The main play function,take cares of which levels or menus are open
 def play():
-    global loop1, ID, temp, speed, jumpSpeed, fireTime, destructPlatform
+    global loop1, ID, temp, speed, jumpSpeed, fireTime, destructPlatform, grass
+
+    # Grass
+    if grass > 3:
+        grass = 0
+    grass += 0.01
 
     # Button presses
     for event in pygame.event.get():
@@ -897,18 +1000,19 @@ def play():
     elif ID == 11:
         end_credits()
 
+    # Platforms that gets destroyed and platforms that kill
     if ID in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] and temp == 0:
         fire()
         for i in destructPlatform:
-            window.blit(platform, (platform_rect.x+i[0], platform_rect.y+i[1]))
+            window.blit(platform, (platform_rect.x+i[0], platform_rect.y+i[1]+8))
         for i in killPlatform:
             window.blit(platformD, (platform_rect.x+i[0], platform_rect.y+i[1]))
 
-    for i in destructPlatform:
-        if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline(player_rect.bottomleft, player_rect.bottomright):
-            player_rect.bottom = platform_rect.y+i[1]
-            if Buttons.w and jump:
-                speed = jumpSpeed
+        for i in destructPlatform:
+            if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline((player_rect.bottomleft[0]+24, player_rect.bottomleft[1]), (player_rect.bottomright[0]-24, player_rect.bottomright[1])):
+                player_rect.bottom = platform_rect.y+i[1]
+                if Buttons.w and jump:
+                    speed = jumpSpeed
 
 
 # Start the mayhem
