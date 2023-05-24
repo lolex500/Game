@@ -86,6 +86,7 @@ bg3 = pygame.transform.scale(pygame.image.load("graphics/bg3.png"), (800 * 12, 3
 player3 = pygame.transform.scale(pygame.image.load("graphics/player3.png"), (12 * 9, 12 * 14)).convert_alpha()
 player3Jump = pygame.transform.scale(pygame.image.load("graphics/player3jump.png"), (12 * 9, 12 * 14)).convert_alpha()
 eye = pygame.transform.scale(pygame.image.load("graphics/eye.png"), (140, 50)).convert_alpha()
+eyeInv = pygame.transform.scale(pygame.image.load("graphics/eyeInv.png"), (140, 50)).convert_alpha()
 
 
 # Music and sound
@@ -157,8 +158,8 @@ def fire():
         if Shoot.left and Buttons.space and speed == 0:
             if Time < 0.01:
                 laser.play()
-            melee_rect = eye.get_rect(midright=(player_rect.left+40, player_rect.centery+15))
-            window.blit(eye, melee_rect)
+            melee_rect = eyeInv.get_rect(midright=(player_rect.left+40, player_rect.centery+15))
+            window.blit(eyeInv, melee_rect)
         if Shoot.right and Buttons.space and speed == 0:
             if Time < 0.01:
                 laser.play()
@@ -716,7 +717,7 @@ def l3():
                 Gear.l3ce = True
                 Gear.l2ce = False
                 Gear.l1ce = False
-            window.blit(swordC, (platform_rect.x+500, platform_rect.y+100))
+            window.blit(eyeC, (platform_rect.x+500, platform_rect.y+100))
         else:
             tempText = text_font.render("Collectible found!", True, "Black")
             window.blit(tempText, tempText.get_rect(center=(400, 50)))
@@ -796,7 +797,7 @@ def l9():
         if not l9c:
             if gunC.get_rect(topleft=(platform_rect.x+900, platform_rect.y+100)).colliderect(player_rect):
                 l9c = True
-                Gear.l1ce = True
+                Gear.l9ce = True
             window.blit(gunC, (platform_rect.x+900, platform_rect.y+100))
         else:
             tempText = text_font.render("Collectible found!", True, "Black")
