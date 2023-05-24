@@ -38,6 +38,7 @@ fin = pygame.transform.scale(pygame.image.load("graphics/fin.png"), (80, 400)).c
 # Collectibles
 jumpShoesC = pygame.transform.scale(pygame.image.load("graphics/shoes.png"), (70, 70)).convert_alpha()
 gunC = pygame.transform.scale(pygame.image.load("graphics/gunC.png"), (70, 35)).convert_alpha()
+shotgunC = pygame.transform.scale(pygame.image.load("graphics/shotgunC.png"), (70, 35)).convert_alpha()
 swordC = pygame.transform.scale(pygame.image.load("graphics/SwordC.png"), (77, 38)).convert_alpha()
 eyeC = pygame.transform.scale(pygame.image.load("graphics/eyeC.png"), (77, 38)).convert_alpha()
 
@@ -70,11 +71,11 @@ player1Jump = pygame.transform.scale(pygame.image.load("graphics/player1jump.png
 bullet = pygame.transform.scale(pygame.image.load("graphics/bullet.png"), (22, 6)).convert_alpha()
 bullet_rect = bullet.get_rect()
 equipped = pygame.transform.scale(pygame.image.load("graphics/equipped.png"), (75, 75)).convert_alpha()
-bg9 = pygame.transform.scale(pygame.image.load("graphics/bg9.png"), (800 * 12, 35 * 12)).convert_alpha()
+bg9 = pygame.transform.scale(pygame.image.load("graphics/bg2.png"), (800 * 12, 35 * 12)).convert_alpha()
 bg9text = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (800 * 12, 35 * 12)).convert_alpha()
-grass1 = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (16*8, 16*4)).convert_alpha()
-grass2 = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (16*8, 16*4)).convert_alpha()
-grass3 = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (16*8, 16*4)).convert_alpha()
+grass1 = pygame.transform.scale(pygame.image.load("graphics/grass1.png"), (16*8, 16*4)).convert_alpha()
+grass2 = pygame.transform.scale(pygame.image.load("graphics/grass2.png"), (16*8, 16*4)).convert_alpha()
+grass3 = pygame.transform.scale(pygame.image.load("graphics/grass3.png"), (16*8, 16*4)).convert_alpha()
 bg2 = pygame.transform.scale(pygame.image.load("graphics/bg2.png"), (800 * 12, 35 * 12)).convert_alpha()
 platform2 = pygame.transform.scale(pygame.image.load("graphics/p2.png"), (160, 40)).convert_alpha()
 platform2cracked = pygame.transform.scale(pygame.image.load("graphics/p2c.png"), (160, 40)).convert_alpha()
@@ -87,6 +88,8 @@ player3 = pygame.transform.scale(pygame.image.load("graphics/player3.png"), (12 
 player3Jump = pygame.transform.scale(pygame.image.load("graphics/player3jump.png"), (12 * 9, 12 * 14)).convert_alpha()
 eye = pygame.transform.scale(pygame.image.load("graphics/eye.png"), (140, 50)).convert_alpha()
 eyeInv = pygame.transform.scale(pygame.image.load("graphics/eyeInv.png"), (140, 50)).convert_alpha()
+bg5 = pygame.transform.scale(pygame.image.load("graphics/bg5.png"), (800 * 12, 35 * 12)).convert_alpha()
+platform5 = pygame.transform.scale(pygame.image.load("graphics/p5.png"), (160, 40)).convert_alpha()
 
 
 # Music and sound
@@ -105,7 +108,8 @@ revolverReload = mixer.Sound("sound/revolverReload.mp3")
 shotgunFire = mixer.Sound("sound/shotgunFire.mp3")
 swing = mixer.Sound("sound/swing.mp3")
 laser = mixer.Sound("sound/laser.mp3")
-sfx = [revolverFire, revolverReload, shotgunFire, swing, laser]
+itemCollected = mixer.Sound("sound/item collected.mp3")
+sfx = [revolverFire, revolverReload, shotgunFire, swing, laser, itemCollected]
 
 
 # Button status
@@ -167,7 +171,7 @@ def fire():
             window.blit(eye, melee_rect)
 
     # Shotgun
-    elif Gear.l4ce and temp == 0:
+    elif Gear.l5ce and temp == 0:
         if Time < 0.01:
             shotgunFire.play()
         if Shoot.left:
@@ -268,7 +272,7 @@ def pcs():
 
 # The screen to view collected items
 def collectibles():
-    global ID, locked, l1c, l2c, l3c, l4c, l5c, l6c, l7c, l8c, l9c, l10c, back, secret, gunC, equipped, timeChange
+    global ID, locked, l1c, l2c, l3c, l4c, l5c, l6c, l7c, l8c, l9c, l10c, back, secret, equipped, timeChange
 
     window.fill("Light Blue")
 
@@ -276,7 +280,7 @@ def collectibles():
     C2 = swordC.get_rect(center=(300, 200))
     C3 = eyeC.get_rect(center=(400, 200))
     C4 = locked.get_rect(center=(500, 200))
-    C5 = locked.get_rect(center=(600, 200))
+    C5 = shotgunC.get_rect(center=(600, 200))
     C6 = locked.get_rect(center=(200, 300))
     C7 = locked.get_rect(center=(300, 300))
     C8 = locked.get_rect(center=(400, 300))
@@ -309,6 +313,7 @@ def collectibles():
                     Gear.l1ce = False
                 Gear.l2ce = False
                 Gear.l3ce = False
+                Gear.l5ce = False
                 timeChange = time.time()
         window.blit(gunC, C1)
     else:
@@ -326,6 +331,7 @@ def collectibles():
                     Gear.l2ce = False
                 Gear.l1ce = False
                 Gear.l3ce = False
+                Gear.l5ce = False
                 timeChange = time.time()
         window.blit(swordC, C2)
     else:
@@ -344,6 +350,7 @@ def collectibles():
                     Gear.l3ce = False
                 Gear.l1ce = False
                 Gear.l2ce = False
+                Gear.l5ce = False
                 timeChange = time.time()
     else:
         window.blit(locked, locked.get_rect(center=C3.center))
@@ -358,7 +365,18 @@ def collectibles():
     if l5c:
         if Gear.l5ce:
             window.blit(equipped, equipped.get_rect(center=C5.center))
-        window.blit(gunC, C5)
+        if C5.collidepoint(pygame.mouse.get_pos()):
+            if Buttons.mouse and time.time()-timeChange >= 0.5:
+                buttonPress.play()
+                if not Gear.l5ce:
+                    Gear.l5ce = True
+                else:
+                    Gear.l5ce = False
+                Gear.l1ce = False
+                Gear.l2ce = False
+                Gear.l3ce = False
+                timeChange = time.time()
+        window.blit(shotgunC, C5)
     else:
         window.blit(locked, locked.get_rect(center=C5.center))
 
@@ -460,7 +478,7 @@ def settings():
 
 # The menu where you select levels, collectibles, or settings
 def menu(natural):
-    global ID, locked, unlocked, introC, l1C, l2C, l3C, l4C, l5C, l6C, l7C, l8C, l9C, l10C, setting, collectible, song, destructPlatform, killPlatform
+    global ID, locked, unlocked, introC, l1C, l2C, l3C, l4C, l5C, l6C, l7C, l8C, l9C, l10C, setting, collectible, song, destructPlatform, killPlatform, speed
     if song != 0:
         song = 0
         mixer.music.stop()
@@ -535,6 +553,7 @@ def menu(natural):
     if ID == 2:
         killPlatform = [[860, -50]]
         destructPlatform = [[600, 80]]
+    speed = 0
 
 
 # The intro level
@@ -567,6 +586,7 @@ def intro():
         if not jump:
             if jumpShoesC.get_rect(topleft=(platform_rect.x+250, platform_rect.y+200)).colliderect(player_rect):
                 jump = True
+                itemCollected.play()
         else:
             tempText = text_font.render("Collectible found, you can now jump!", True, "Black")
             window.blit(tempText, tempText.get_rect(center=(400, 50)))
@@ -620,6 +640,10 @@ def l1():
             if gunC.get_rect(topleft=(platform_rect.x+500, platform_rect.y+100)).colliderect(player_rect):
                 l1c = True
                 Gear.l1ce = True
+                Gear.l2ce = False
+                Gear.l3ce = False
+                Gear.l5ce = False
+                itemCollected.play()
             window.blit(gunC, (platform_rect.x+500, platform_rect.y+100))
         else:
             tempText = text_font.render("Collectible found!", True, "Black")
@@ -668,6 +692,9 @@ def l2():
                 l2c = True
                 Gear.l2ce = True
                 Gear.l1ce = False
+                Gear.l3ce = False
+                Gear.l5ce = False
+                itemCollected.play()
             window.blit(swordC, (platform_rect.x+500, platform_rect.y+100))
         else:
             tempText = text_font.render("Collectible found!", True, "Black")
@@ -717,6 +744,8 @@ def l3():
                 Gear.l3ce = True
                 Gear.l2ce = False
                 Gear.l1ce = False
+                Gear.l5ce = False
+                itemCollected.play()
             window.blit(eyeC, (platform_rect.x+500, platform_rect.y+100))
         else:
             tempText = text_font.render("Collectible found!", True, "Black")
@@ -741,10 +770,57 @@ def l4():
 
 
 def l5():
-    global ID, l5C
-    window.fill("Red")
-    ID = -1
-    l5C = True
+    global temp, l5C, l5c, ID, speed, jumpSpeed
+    platforms = [[30, 350], [190, 350], [450, 250]]
+    if temp == 0:
+        if player_rect.bottom < 400:
+            player_rect.bottom += 8
+
+        # Collisions with platforms
+        for i in platforms:
+            if platform5.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline((player_rect.bottomleft[0]+24, player_rect.bottomleft[1]), (player_rect.bottomright[0]-24, player_rect.bottomright[1])):
+                player_rect.bottom = platform_rect.y+i[1]
+                if Buttons.w:
+                    speed = jumpSpeed
+
+        # Graphics
+        window.blit(bg5, bg_rect)
+        if speed != 0:
+            window.blit(playerJump, player_rect)
+        else:
+            window.blit(player, player_rect)
+        for i in platforms:
+            window.blit(platform5, (platform_rect.x+i[0], platform_rect.y+i[1]))
+            if 0 <= grass < 1:
+                window.blit(grass1, grass1.get_rect(midbottom=(platform_rect.x+i[0]+80, platform_rect.y+i[1])))
+            elif 1 <= grass < 2:
+                window.blit(grass2, grass2.get_rect(midbottom=(platform_rect.x+i[0]+80, platform_rect.y+i[1])))
+            else:
+                window.blit(grass3, grass3.get_rect(midbottom=(platform_rect.x+i[0]+80, platform_rect.y+i[1])))
+
+        # Collectible
+        if not l5c:
+            if shotgunC.get_rect(topleft=(platform_rect.x+450, platform_rect.y+50)).colliderect(player_rect):
+                l5c = True
+                Gear.l5ce = True
+                Gear.l1ce = False
+                Gear.l2ce = False
+                Gear.l3ce = False
+                itemCollected.play()
+            window.blit(shotgunC, (platform_rect.x+500, platform_rect.y+100))
+        else:
+            tempText = text_font.render("Collectible found!", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 50)))
+
+        # Win conditions
+        window.blit(fin, (platform_rect.x+600, platform_rect.y))
+        if player_rect.x-platform_rect.x >= 600:
+            l5C = True
+            temp = 1
+
+        # Loss conditions
+        if player_rect.bottom >= 400:
+            temp = 2
 
 
 def l6():
@@ -880,11 +956,11 @@ def end_credits():
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2150)))
     tempText = text_font.render("Viktor Lennartsson", True, "White")
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2200)))
-    tempText = text_font.render("People we unfortunately lost during the way", True, "White")
+    tempText = text_font.render("Employee of the year!", True, "White")
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2300)))
     tempText = text_font.render("Viktor Lennartsson", True, "White")
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2350)))
-    tempText = text_font.render("PR Department", True, "White")
+    tempText = text_font.render("Made by:", True, "White")
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2450)))
     tempText = text_font.render("Viktor Lennartsson", True, "White")
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+2500)))
