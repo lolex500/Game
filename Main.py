@@ -38,6 +38,8 @@ fin = pygame.transform.scale(pygame.image.load("graphics/fin.png"), (80, 400)).c
 # Collectibles
 jumpShoesC = pygame.transform.scale(pygame.image.load("graphics/shoes.png"), (70, 70)).convert_alpha()
 gunC = pygame.transform.scale(pygame.image.load("graphics/gunC.png"), (70, 35)).convert_alpha()
+swordC = pygame.transform.scale(pygame.image.load("graphics/SwordC.png"), (77, 38)).convert_alpha()
+eyeC = pygame.transform.scale(pygame.image.load("graphics/eyeC.png"), (77, 38)).convert_alpha()
 
 
 # Graphics for the menu
@@ -46,6 +48,7 @@ locked = pygame.transform.scale(pygame.image.load("graphics/Locked.png"), (70, 7
 setting = pygame.transform.scale(pygame.image.load("graphics/Settings.png"), (70, 70)).convert_alpha()
 collectible = pygame.transform.scale(pygame.image.load("graphics/Collectibles.png"), (70, 70)).convert_alpha()
 back = pygame.transform.scale(pygame.image.load("graphics/Back.png"), (70, 70)).convert_alpha()
+box = pygame.transform.scale(pygame.image.load("graphics/Box.png"), (210, 70)).convert_alpha()
 secret = pygame.transform.scale(pygame.image.load("graphics/Secret.png"), (70, 70)).convert_alpha()
 
 
@@ -69,9 +72,20 @@ bullet_rect = bullet.get_rect()
 equipped = pygame.transform.scale(pygame.image.load("graphics/equipped.png"), (75, 75)).convert_alpha()
 bg9 = pygame.transform.scale(pygame.image.load("graphics/bg9.png"), (800 * 12, 35 * 12)).convert_alpha()
 bg9text = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (800 * 12, 35 * 12)).convert_alpha()
-grass1 = pygame.transform.scale(pygame.image.load("graphics/grass1.png"), (16*8, 16*4)).convert_alpha()
-grass2 = pygame.transform.scale(pygame.image.load("graphics/grass2.png"), (16*8, 16*4)).convert_alpha()
-grass3 = pygame.transform.scale(pygame.image.load("graphics/grass3.png"), (16*8, 16*4)).convert_alpha()
+grass1 = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (16*8, 16*4)).convert_alpha()
+grass2 = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (16*8, 16*4)).convert_alpha()
+grass3 = pygame.transform.scale(pygame.image.load("graphics/bg1.png"), (16*8, 16*4)).convert_alpha()
+bg2 = pygame.transform.scale(pygame.image.load("graphics/bg2.png"), (800 * 12, 35 * 12)).convert_alpha()
+platform2 = pygame.transform.scale(pygame.image.load("graphics/p2.png"), (160, 40)).convert_alpha()
+platform2cracked = pygame.transform.scale(pygame.image.load("graphics/p2c.png"), (160, 40)).convert_alpha()
+player2 = pygame.transform.scale(pygame.image.load("graphics/player2.png"), (12 * 9, 12 * 14)).convert_alpha()
+player2Jump = pygame.transform.scale(pygame.image.load("graphics/player2jump.png"), (12 * 9, 12 * 14)).convert_alpha()
+sword = pygame.transform.scale(pygame.image.load("graphics/sword.png"), (120, 50)).convert_alpha()
+swordInv = pygame.transform.scale(pygame.image.load("graphics/swordInv.png"), (120, 50)).convert_alpha()
+bg3 = pygame.transform.scale(pygame.image.load("graphics/bg3.png"), (800 * 12, 35 * 12)).convert_alpha()
+player3 = pygame.transform.scale(pygame.image.load("graphics/player3.png"), (12 * 9, 12 * 14)).convert_alpha()
+player3Jump = pygame.transform.scale(pygame.image.load("graphics/player3jump.png"), (12 * 9, 12 * 14)).convert_alpha()
+eye = pygame.transform.scale(pygame.image.load("graphics/eye.png"), (140, 50)).convert_alpha()
 
 
 # Music and sound
@@ -81,6 +95,16 @@ musicVolume = 0.5
 mixer.music.load("sound/starbound.mp3")
 mixer.music.set_volume(musicVolume)
 mixer.music.play(-1)
+buttonVolume = 0.5
+buttonPress = mixer.Sound("sound/buttonPress.mp3")
+mixer.Sound.set_volume(buttonPress, buttonVolume)
+sfxVolume = 0.5
+revolverFire = mixer.Sound("sound/revolverFire.mp3")
+revolverReload = mixer.Sound("sound/revolverReload.mp3")
+shotgunFire = mixer.Sound("sound/shotgunFire.mp3")
+swing = mixer.Sound("sound/swing.mp3")
+laser = mixer.Sound("sound/laser.mp3")
+sfx = [revolverFire, revolverReload, shotgunFire, swing, laser]
 
 
 # Button status
@@ -100,46 +124,77 @@ class Shoot:
 
 
 def fire():
-    global bullet, destructPlatform, killPlatform
+    global bullet, destructPlatform, killPlatform, temp
     Time = time.time()-fireTime
+    bulletList = []
+    melee_rect = sword.get_rect(center=(0, -1000))
 
     # Revolver
-    if Gear.l1ce:
+    if Gear.l1ce and temp == 0:
+        if Time < 0.01:
+            revolverFire.play()
+            revolverReload.play()
         if Shoot.left:
-            window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y))
-            for i in destructPlatform:
-                if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x-(Time*800), bullet_rect.y))]):
-                    pass
-                else:
-                    destructPlatform.remove(i)
-            for i in killPlatform:
-                if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x-(Time*800), bullet_rect.y))]):
-                    pass
-                else:
-                    killPlatform.remove(i)
+            bulletList = [(bullet_rect.x-(Time*800), bullet_rect.y)]
         if Shoot.right:
-            window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y))
-            for i in destructPlatform:
-                if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x+(Time*800), bullet_rect.y))]):
-                    pass
-                else:
-                    destructPlatform.remove(i)
-            for i in killPlatform:
-                if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=(bullet_rect.x+(Time*800), bullet_rect.y))]):
-                    pass
-                else:
-                    killPlatform.remove(i)
+            bulletList = [(bullet_rect.x+(Time*800), bullet_rect.y)]
+
+    # Sword
+    elif Gear.l2ce and temp == 0:
+        if Shoot.left and Buttons.space and speed == 0:
+            if Time < 0.01:
+                swing.play()
+            melee_rect = sword.get_rect(midright=(player_rect.left+40, player_rect.centery+15))
+            window.blit(swordInv, melee_rect)
+        if Shoot.right and Buttons.space and speed == 0:
+            if Time < 0.01:
+                swing.play()
+            melee_rect = sword.get_rect(midleft=(player_rect.right-40, player_rect.centery+15))
+            window.blit(sword, melee_rect)
+
+    # Eye
+    elif Gear.l3ce and temp == 0:
+        if Shoot.left and Buttons.space and speed == 0:
+            if Time < 0.01:
+                laser.play()
+            melee_rect = eye.get_rect(midright=(player_rect.left+40, player_rect.centery+15))
+            window.blit(eye, melee_rect)
+        if Shoot.right and Buttons.space and speed == 0:
+            if Time < 0.01:
+                laser.play()
+            melee_rect = eye.get_rect(midleft=(player_rect.right-40, player_rect.centery+15))
+            window.blit(eye, melee_rect)
 
     # Shotgun
-    # elif Gear.l# lvl. number where shotgun got #ce:
-    #     if Shoot.left:
-    #         window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y+(Time*200)))
-    #         window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y))
-    #         window.blit(bullet, (bullet_rect.x-(Time*800), bullet_rect.y-(Time*200)))
-    #     if Shoot.right:
-    #         window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y+(Time*200)))
-    #         window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y))
-    #         window.blit(bullet, (bullet_rect.x+(Time*800), bullet_rect.y-(Time*200)))
+    elif Gear.l4ce and temp == 0:
+        if Time < 0.01:
+            shotgunFire.play()
+        if Shoot.left:
+            bulletList = [(bullet_rect.x-(Time*800), bullet_rect.y+(Time*200)),
+                          (bullet_rect.x-(Time*800), bullet_rect.y),
+                          (bullet_rect.x-(Time*800), bullet_rect.y-(Time*200))]
+        if Shoot.right:
+            bulletList = [(bullet_rect.x+(Time*800), bullet_rect.y+(Time*200)),
+                          (bullet_rect.x+(Time*800), bullet_rect.y),
+                          (bullet_rect.x+(Time*800), bullet_rect.y-(Time*200))]
+
+    # Check if bullet hits platform
+    for j in bulletList:
+        window.blit(bullet, j)
+        for i in destructPlatform:
+            if not platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=j)]):
+                destructPlatform.remove(i)
+        for i in killPlatform:
+            if not platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).collidelist([bullet.get_rect(topleft=j)]):
+                killPlatform.remove(i)
+
+    # Check if melee hits platform
+    for i in destructPlatform:
+        if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).colliderect(melee_rect):
+            destructPlatform.remove(i)
+    for i in killPlatform:
+        if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).colliderect(melee_rect):
+            killPlatform.remove(i)
 
 
 # Equipped gear
@@ -191,22 +246,34 @@ try:
 except Exception as ex:
     print(ex, "(Not a real problem, 99% sure)")
 mixer.music.set_volume(musicVolume)
+mixer.Sound.set_volume(buttonPress, buttonVolume)
+for z in sfx:
+    mixer.Sound.set_volume(z, sfxVolume)
 
 
 # Post credit scene
 def pcs():
-    pass
+    global back, ID
+
+    window.fill("Light Blue")
+
+    # Back to menu button
+    back_rect = back.get_rect(center=(400, 50))
+    window.blit(back, back_rect)
+    if Buttons.mouse and back_rect.collidepoint(pygame.mouse.get_pos()):
+        buttonPress.play()
+        ID = -3
 
 
 # The screen to view collected items
 def collectibles():
     global ID, locked, l1c, l2c, l3c, l4c, l5c, l6c, l7c, l8c, l9c, l10c, back, secret, gunC, equipped, timeChange
+
     window.fill("Light Blue")
-    back_rect = back.get_rect(center=(200, 50))
-    secret_rect = secret.get_rect(center=(600, 50))
+
     C1 = gunC.get_rect(center=(200, 200))
-    C2 = locked.get_rect(center=(300, 200))
-    C3 = locked.get_rect(center=(400, 200))
+    C2 = swordC.get_rect(center=(300, 200))
+    C3 = eyeC.get_rect(center=(400, 200))
     C4 = locked.get_rect(center=(500, 200))
     C5 = locked.get_rect(center=(600, 200))
     C6 = locked.get_rect(center=(200, 300))
@@ -215,24 +282,32 @@ def collectibles():
     C9 = locked.get_rect(center=(500, 300))
     C10 = locked.get_rect(center=(600, 300))
 
+    # Back to menu button
+    back_rect = back.get_rect(center=(200, 50))
     window.blit(back, back_rect)
     if Buttons.mouse and back_rect.collidepoint(pygame.mouse.get_pos()):
         ID = -1
+        buttonPress.play()
 
+    # Start a cutscene if you have all collectibles
+    secret_rect = secret.get_rect(center=(600, 50))
     window.blit(secret, secret_rect)
     if Buttons.mouse and secret_rect.collidepoint(pygame.mouse.get_pos()):
         ID = -4
+        buttonPress.play()
 
     if l1c:
         if Gear.l1ce:
             window.blit(equipped, equipped.get_rect(center=C1.center))
         if C1.collidepoint(pygame.mouse.get_pos()):
             if Buttons.mouse and time.time()-timeChange >= 0.5:
+                buttonPress.play()
                 if not Gear.l1ce:
                     Gear.l1ce = True
                 else:
                     Gear.l1ce = False
                 Gear.l2ce = False
+                Gear.l3ce = False
                 timeChange = time.time()
         window.blit(gunC, C1)
     else:
@@ -243,20 +318,32 @@ def collectibles():
             window.blit(equipped, equipped.get_rect(center=C2.center))
         if C2.collidepoint(pygame.mouse.get_pos()):
             if Buttons.mouse and time.time()-timeChange >= 0.5:
+                buttonPress.play()
                 if not Gear.l2ce:
                     Gear.l2ce = True
                 else:
                     Gear.l2ce = False
                 Gear.l1ce = False
+                Gear.l3ce = False
                 timeChange = time.time()
-        window.blit(gunC, C2)
+        window.blit(swordC, C2)
     else:
         window.blit(locked, locked.get_rect(center=C2.center))
 
     if l3c:
         if Gear.l3ce:
             window.blit(equipped, equipped.get_rect(center=C3.center))
-        window.blit(gunC, C3)
+        window.blit(eyeC, C3)
+        if C3.collidepoint(pygame.mouse.get_pos()):
+            if Buttons.mouse and time.time()-timeChange >= 0.5:
+                buttonPress.play()
+                if not Gear.l3ce:
+                    Gear.l3ce = True
+                else:
+                    Gear.l3ce = False
+                Gear.l1ce = False
+                Gear.l2ce = False
+                timeChange = time.time()
     else:
         window.blit(locked, locked.get_rect(center=C3.center))
 
@@ -299,6 +386,14 @@ def collectibles():
         if Gear.l9ce:
             window.blit(equipped, equipped.get_rect(center=C9.center))
         window.blit(gunC, C9)
+        if C9.collidepoint(pygame.mouse.get_pos()):
+            if Buttons.mouse and time.time()-timeChange >= 0.5:
+                buttonPress.play()
+                if not Gear.l9ce:
+                    Gear.l9ce = True
+                else:
+                    Gear.l9ce = False
+                timeChange = time.time()
     else:
         window.blit(locked, locked.get_rect(center=C9.center))
 
@@ -312,27 +407,58 @@ def collectibles():
 
 # The settings for important things
 def settings():
-    global musicVolume
+    global buttonVolume, musicVolume, sfxVolume, ID
+
     window.fill("Light blue")
-    sliderButton = (100, 300)
+    sliders = [((100, 300), "Music", musicVolume),
+               ((100, 200), "Button", buttonVolume),
+               ((100, 100), "SFX", sfxVolume)]
     mouse = pygame.mouse.get_pos()
-    sliderPos = musicVolume * 580
-    if Buttons.mouse and sliderButton[0]+10 <= mouse[0] <= sliderButton[0]+590 and sliderButton[1] <= mouse[1] <= sliderButton[1]+50:
-        sliderPos = mouse[0]-110
-        if musicVolume != round(sliderPos/580, 2):
-            pass
-            # Button click sound
-        musicVolume = round(sliderPos/580, 2)
-    sliderPlacement = (sliderPos + sliderButton[0], sliderButton[1], 20, 50)
-    pygame.draw.rect(window, (200, 200, 200), pygame.Rect((sliderButton[0], sliderButton[1], 600, 50)))
-    pygame.draw.rect(window, (100, 100, 100), pygame.Rect(sliderPlacement))
-    mixer.music.set_volume(musicVolume)
+
+    j = 0
+    for i, j, k in sliders:
+        if Buttons.mouse and i[0]+10 <= mouse[0] <= i[0]+590 and i[1] <= mouse[1] <= i[1]+50:
+            if k != round((mouse[0]-110)/580, 2):
+                if j == "Music":
+                    musicVolume = round((mouse[0]-110)/580, 2)
+                    mixer.music.set_volume(musicVolume)
+                elif j == "Button":
+                    buttonVolume = round((mouse[0]-110)/580, 2)
+                    mixer.Sound.set_volume(buttonPress, buttonVolume)
+                elif j == "SFX":
+                    sfxVolume = round((mouse[0]-110)/580, 2)
+                    for z in sfx:
+                        mixer.Sound.set_volume(z, sfxVolume)
+                buttonPress.play()
+        pygame.draw.rect(window, (200, 200, 200), pygame.Rect((i[0], i[1], 600, 50)))
+        pygame.draw.rect(window, (100, 100, 100), pygame.Rect((k*580 + i[0], i[1], 20, 50)))
+
     textMusicVolume = text_font.render(("Music Volume: " + str(round(musicVolume * 100)) + "%"), True, (50, 50, 50))
-    window.blit(textMusicVolume, (100, sliderButton[1]+10))
+    window.blit(textMusicVolume, (100, 310))
+    textButtonVolume = text_font.render(("Button Volume: " + str(round(buttonVolume * 100)) + "%"), True, (50, 50, 50))
+    window.blit(textButtonVolume, (100, 210))
+    textSfxVolume = text_font.render(("SFX Volume: " + str(round(sfxVolume * 100)) + "%"), True, (50, 50, 50))
+    window.blit(textSfxVolume, (100, 110))
+
+    # Reset game
+    box_rect = box.get_rect(midright=(600, 50))
+    window.blit(box, box_rect)
+    textReset = text_font.render(("Reset game"), True, (50, 50, 50))
+    window.blit(textReset, textReset.get_rect(center=box_rect.center))
+    if Buttons.mouse and box_rect.collidepoint(pygame.mouse.get_pos()):
+        save_object("")
+        sys.exit()
+
+    # Back to menu button
+    back_rect = back.get_rect(midleft=(200, 50))
+    window.blit(back, back_rect)
+    if Buttons.mouse and back_rect.collidepoint(pygame.mouse.get_pos()):
+        buttonPress.play()
+        ID = -1
 
 
 # The menu where you select levels, collectibles, or settings
-def menu():
+def menu(natural):
     global ID, locked, unlocked, introC, l1C, l2C, l3C, l4C, l5C, l6C, l7C, l8C, l9C, l10C, setting, collectible, song, destructPlatform, killPlatform
     if song != 0:
         song = 0
@@ -341,142 +467,73 @@ def menu():
         mixer.music.play(-1)
     window.fill("Light Blue")
 
-    # Create rect for blit
-    collectible_rect = setting.get_rect(center=(100, 50))
-    setting_rect = setting.get_rect(center=(700, 50))
-    Ui = unlocked.get_rect(center=(100, 150))
-    U1 = unlocked.get_rect(center=(300, 150))
-    U2 = unlocked.get_rect(center=(500, 150))
-    U3 = unlocked.get_rect(center=(700, 150))
-    U4 = unlocked.get_rect(center=(100, 250))
-    U5 = unlocked.get_rect(center=(300, 250))
-    U6 = unlocked.get_rect(center=(500, 250))
-    U7 = unlocked.get_rect(center=(700, 250))
-    U8 = unlocked.get_rect(center=(100, 350))
-    U9 = unlocked.get_rect(center=(300, 350))
-    U10 = unlocked.get_rect(center=(500, 350))
-    Uec = unlocked.get_rect(center=(700, 350))
+    if natural:
 
-    window.blit(collectible, collectible_rect)
-    if Buttons.mouse:
-        if collectible_rect.collidepoint(pygame.mouse.get_pos()):
-            ID = -3
+        # Create rect for blit
+        collectible_rect = setting.get_rect(center=(100, 50))
+        setting_rect = setting.get_rect(center=(700, 50))
+        Ui = unlocked.get_rect(center=(100, 150))
+        U1 = unlocked.get_rect(center=(300, 150))
+        U2 = unlocked.get_rect(center=(500, 150))
+        U3 = unlocked.get_rect(center=(700, 150))
+        U4 = unlocked.get_rect(center=(100, 250))
+        U5 = unlocked.get_rect(center=(300, 250))
+        U6 = unlocked.get_rect(center=(500, 250))
+        U7 = unlocked.get_rect(center=(700, 250))
+        U8 = unlocked.get_rect(center=(100, 350))
+        U9 = unlocked.get_rect(center=(300, 350))
+        U10 = unlocked.get_rect(center=(500, 350))
+        Uec = unlocked.get_rect(center=(700, 350))
 
-    window.blit(setting, setting_rect)
-    if Buttons.mouse:
-        if setting_rect.collidepoint(pygame.mouse.get_pos()):
-            ID = -2
+        window.blit(collectible, collectible_rect)
+        window.blit(setting, setting_rect)
+        window.blit(unlocked, Ui)
+        tempText = text_font.render("Intro", True, "Black")
+        window.blit(tempText, tempText.get_rect(center=Ui.center))
 
-    window.blit(unlocked, Ui)
-    tempText = text_font.render("Intro", True, "Black")
-    window.blit(tempText, tempText.get_rect(center=Ui.center))
-    if Buttons.mouse:
-        if Ui.collidepoint(pygame.mouse.get_pos()):
-            ID = 0
-            destructPlatform = [[400, 200], [500, 100]]
-            killPlatform = [[700, 200]]
+        level_data = [
+            (U1, "lvl.1", 1, introC),
+            (U2, "lvl.2", 2, l1C),
+            (U3, "lvl.3", 3, l2C),
+            (U4, "lvl.4", 4, l3C),
+            (U5, "lvl.5", 5, l4C),
+            (U6, "lvl.6", 6, l5C),
+            (U7, "lvl.7", 7, l6C),
+            (U8, "lvl.8", 8, l7C),
+            (U9, "lvl.9", 9, l8C),
+            (U10, "lvl.10", 10, l9C),
+            (Uec, "End", 11, l10C)]
 
-    if introC:
-        window.blit(unlocked, U1)
-        tempText = text_font.render("lvl.1", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U1.center))
-        if Buttons.mouse and U1.collidepoint(pygame.mouse.get_pos()):
-            ID = 1
-    else:
-        window.blit(locked, U1)
+        for rect, text, level_id, completed in level_data:
+            if not completed:
+                window.blit(locked, rect)
+            else:
+                window.blit(unlocked, rect)
+                tempText = text_font.render(text, True, "Black")
+                window.blit(tempText, tempText.get_rect(center=rect.center))
+                if Buttons.mouse and rect.collidepoint(pygame.mouse.get_pos()):
+                    buttonPress.play()
+                    ID = level_id
 
-    if l1C:
-        window.blit(unlocked, U2)
-        tempText = text_font.render("lvl.2", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U2.center))
-        if Buttons.mouse and U2.collidepoint(pygame.mouse.get_pos()):
-            ID = 2
-    else:
-        window.blit(locked, U2)
+        if Buttons.mouse:
+            if collectible_rect.collidepoint(pygame.mouse.get_pos()):
+                buttonPress.play()
+                ID = -3
+            if setting_rect.collidepoint(pygame.mouse.get_pos()):
+                buttonPress.play()
+                ID = -2
+            if Ui.collidepoint(pygame.mouse.get_pos()):
+                buttonPress.play()
+                ID = 0
 
-    if l2C:
-        window.blit(unlocked, U3)
-        tempText = text_font.render("lvl.3", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U3.center))
-        if Buttons.mouse and U3.collidepoint(pygame.mouse.get_pos()):
-            ID = 3
-    else:
-        window.blit(locked, U3)
+        window.blit(text_font.render("The Game", True, "Black"), text_font.render("The Game", True, "Black").get_rect(center=(400, 50)))
 
-    if l3C:
-        window.blit(unlocked, U4)
-        tempText = text_font.render("lvl.4", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U4.center))
-        if Buttons.mouse and U4.collidepoint(pygame.mouse.get_pos()):
-            ID = 4
-    else:
-        window.blit(locked, U4)
-
-    if l4C:
-        window.blit(unlocked, U5)
-        tempText = text_font.render("lvl.5", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U5.center))
-        if Buttons.mouse and U5.collidepoint(pygame.mouse.get_pos()):
-            ID = 5
-    else:
-        window.blit(locked, U5)
-
-    if l5C:
-        window.blit(unlocked, U6)
-        tempText = text_font.render("lvl.6", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U6.center))
-        if Buttons.mouse and U6.collidepoint(pygame.mouse.get_pos()):
-            ID = 6
-    else:
-        window.blit(locked, U6)
-
-    if l6C:
-        window.blit(unlocked, U7)
-        tempText = text_font.render("lvl.7", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U7.center))
-        if Buttons.mouse and U7.collidepoint(pygame.mouse.get_pos()):
-            ID = 7
-    else:
-        window.blit(locked, U7)
-
-    if l7C:
-        window.blit(unlocked, U8)
-        tempText = text_font.render("lvl.8", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U8.center))
-        if Buttons.mouse and U8.collidepoint(pygame.mouse.get_pos()):
-            ID = 8
-    else:
-        window.blit(locked, U8)
-
-    if l8C:
-        window.blit(unlocked, U9)
-        tempText = text_font.render("lvl.9", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U9.center))
-        if Buttons.mouse and U9.collidepoint(pygame.mouse.get_pos()):
-            ID = 9
-    else:
-        window.blit(locked, U9)
-
-    if l9C:
-        window.blit(unlocked, U10)
-        tempText = text_font.render("lvl.10", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=U10.center))
-        if Buttons.mouse and U10.collidepoint(pygame.mouse.get_pos()):
-            ID = 10
-    else:
-        window.blit(locked, U10)
-
-    if l10C:
-        window.blit(unlocked, Uec)
-        tempText = text_font.render("End", True, "Black")
-        window.blit(tempText, tempText.get_rect(center=Uec.center))
-        if Buttons.mouse and Uec.collidepoint(pygame.mouse.get_pos()):
-            ID = 11
-    else:
-        window.blit(locked, Uec)
-
-    tempText = text_font.render("The Game", True, "Black")
-    window.blit(tempText, tempText.get_rect(center=(400, 50)))
+    # Create special platforms
+    if ID == 1:
+        killPlatform = [[700, 200], [600, 100]]
+    if ID == 2:
+        killPlatform = [[860, -50]]
+        destructPlatform = [[600, 80]]
 
 
 # The intro level
@@ -525,54 +582,6 @@ def intro():
         for i in killPlatform:
             if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).colliderect(player_rect):
                 temp = 2
-
-    # When the level is over, check if the player wants the next level or the menu
-    elif temp == 1:
-        if Buttons.mouse:
-            if pygame.mouse.get_pos()[0] <= screen[0]/2:
-                ID = -1
-                destructPlatform = []
-                killPlatform = []
-            else:
-                ID = 1
-                destructPlatform = []
-                killPlatform = []
-            temp = 0
-            player_rect.bottomleft = (50, 0)
-            platform_rect.topleft = (0, 0)
-            bg_rect.topleft = (-50, 0)
-        else:
-            window.fill("Light Blue")
-            tempText = text_font.render("Intro Complete!", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(400, 80)))
-            tempText = text_font.render("Main menu", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(200, 200)))
-            tempText = text_font.render("Next Level", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(600, 200)))
-
-    # Restart level or return to menu after loss
-    else:
-        if Buttons.mouse:
-            if pygame.mouse.get_pos()[0] <= screen[0]/2:
-                ID = -1
-                destructPlatform = []
-                killPlatform = []
-            else:
-                ID = 0
-                destructPlatform = [[400, 200], [500, 100]]
-                killPlatform = [[700, 200]]
-            temp = 0
-            player_rect.bottomleft = (50, 0)
-            platform_rect.topleft = (0, 0)
-            bg_rect.topleft = (0, 0)
-        else:
-            window.fill("Light Blue")
-            tempText = text_font.render("Level failed", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(400, 80)))
-            tempText = text_font.render("Main menu", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(200, 200)))
-            tempText = text_font.render("Restart Level", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(600, 200)))
 
 
 def l1():
@@ -624,60 +633,103 @@ def l1():
         # Loss conditions
         if player_rect.bottom >= 400:
             temp = 2
-
-    # When the level is over, check if the player wants the next level or the menu
-    elif temp == 1:
-        if Buttons.mouse:
-            if pygame.mouse.get_pos()[0] <= screen[0]/2:
-                ID = -1
-            else:
-                ID = 2
-            temp = 0
-            player_rect.bottomleft = (50, 0)
-            platform_rect.topleft = (0, 0)
-            bg_rect.topleft = (-50, 0)
-        else:
-            window.fill("Light Blue")
-            tempText = text_font.render("Level 1 Complete!", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(400, 80)))
-            tempText = text_font.render("Main menu", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(200, 200)))
-            tempText = text_font.render("Next Level", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(600, 200)))
-
-    # Restart level or return to menu after loss
-    else:
-        if Buttons.mouse:
-            if pygame.mouse.get_pos()[0] <= screen[0]/2:
-                ID = -1
-            else:
-                ID = 1
-            temp = 0
-            player_rect.bottomleft = (50, 0)
-            platform_rect.topleft = (0, 0)
-            bg_rect.topleft = (0, 0)
-        else:
-            window.fill("Light Blue")
-            tempText = text_font.render("Level failed", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(400, 80)))
-            tempText = text_font.render("Main menu", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(200, 200)))
-            tempText = text_font.render("Restart Level", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(600, 200)))
+        for i in killPlatform:
+            if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).colliderect(player_rect):
+                temp = 2
 
 
 def l2():
-    global ID, l2C
-    window.fill("Red")
-    ID = -1
-    l2C = True
+    global temp, l2C, l2c, ID, speed, jumpSpeed
+    platforms = [[30, 350], [190, 350], [450, 350], [610, 370], [850, 370], [1050, 270], [830, 170], [830, 30], [1050, 50], [1250, 130]]
+    if temp == 0:
+        if player_rect.bottom < 400:
+            player_rect.bottom += 8
+
+        # Collisions with platforms
+        for i in platforms:
+            if platform2.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline((player_rect.bottomleft[0]+24, player_rect.bottomleft[1]), (player_rect.bottomright[0]-24, player_rect.bottomright[1])):
+                player_rect.bottom = platform_rect.y+i[1]
+                if Buttons.w:
+                    speed = jumpSpeed
+
+        # Graphics
+        window.blit(bg2, bg_rect)
+        if speed != 0:
+            window.blit(player2Jump, player_rect)
+        else:
+            window.blit(player2, player_rect)
+        for i in platforms:
+            window.blit(platform2, (platform_rect.x+i[0], platform_rect.y+i[1]))
+
+        # Collectible
+        if not l2c:
+            if swordC.get_rect(topleft=(platform_rect.x+450, platform_rect.y+50)).colliderect(player_rect):
+                l2c = True
+                Gear.l2ce = True
+                Gear.l1ce = False
+            window.blit(swordC, (platform_rect.x+500, platform_rect.y+100))
+        else:
+            tempText = text_font.render("Collectible found!", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 50)))
+
+        # Win conditions
+        window.blit(fin, (platform_rect.x+1600, platform_rect.y))
+        if player_rect.x-platform_rect.x >= 1600:
+            l2C = True
+            temp = 1
+
+        # Loss conditions
+        if player_rect.bottom >= 400:
+            temp = 2
+        for i in killPlatform:
+            if platformD.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).colliderect(player_rect):
+                temp = 2
 
 
 def l3():
-    global ID, l3C
-    window.fill("Red")
-    ID = -1
-    l3C = True
+    global temp, l3C, l3c, ID, speed, jumpSpeed
+    platforms = [[30, 375], [330, 375], [630, 375], [930, 375], [1230, 375], [1530, 375], [1830, 375], [2130, 375], [2430, 375], [2730, 375], [3030, 375], [3330, 375], [3630, 375], [3930, 375], [4230, 375], [4530, 375], [4830, 375], [5130, 375], [5430, 375], [5730, 375], [6030, 375], [6330, 375]]
+    if temp == 0:
+        if player_rect.bottom < 400:
+            player_rect.bottom += 8
+
+        # Collisions with platforms
+        for i in platforms:
+            if platform2.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline((player_rect.bottomleft[0]+24, player_rect.bottomleft[1]), (player_rect.bottomright[0]-24, player_rect.bottomright[1])):
+                player_rect.bottom = platform_rect.y+i[1]
+                if Buttons.w:
+                    speed = jumpSpeed
+
+        # Graphics
+        window.blit(bg3, bg_rect)
+        if speed != 0:
+            window.blit(player3Jump, player_rect)
+        else:
+            window.blit(player3, player_rect)
+        for i in platforms:
+            window.blit(platform2, (platform_rect.x+i[0], platform_rect.y+i[1]))
+
+        # Collectible
+        if not l3c:
+            if swordC.get_rect(topleft=(platform_rect.x+450, platform_rect.y+50)).colliderect(player_rect):
+                l3c = True
+                Gear.l3ce = True
+                Gear.l2ce = False
+                Gear.l1ce = False
+            window.blit(swordC, (platform_rect.x+500, platform_rect.y+100))
+        else:
+            tempText = text_font.render("Collectible found!", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 50)))
+
+        # Win conditions
+        window.blit(fin, (platform_rect.x+6500, platform_rect.y))
+        if player_rect.x-platform_rect.x >= 6500:
+            l3C = True
+            temp = 1
+
+        # Loss conditions
+        if player_rect.bottom >= 400:
+            temp = 2
 
 
 def l4():
@@ -760,46 +812,6 @@ def l9():
         if player_rect.bottom >= 400:
             temp = 2
 
-    # When the level is over, check if the player wants the next level or the menu
-    elif temp == 1:
-        if Buttons.mouse:
-            if pygame.mouse.get_pos()[0] <= screen[0]/2:
-                ID = -1
-            else:
-                ID = 10
-            temp = 0
-            player_rect.bottomleft = (50, 0)
-            platform_rect.topleft = (0, 0)
-            bg_rect.topleft = (-50, 0)
-        else:
-            window.fill("Light Blue")
-            tempText = text_font.render("Level 9 Complete!", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(400, 80)))
-            tempText = text_font.render("Main menu", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(200, 200)))
-            tempText = text_font.render("Next Level", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(600, 200)))
-
-    # Restart level or return to menu after loss
-    else:
-        if Buttons.mouse:
-            if pygame.mouse.get_pos()[0] <= screen[0]/2:
-                ID = -1
-            else:
-                ID = 9
-            temp = 0
-            player_rect.bottomleft = (50, 0)
-            platform_rect.topleft = (0, 0)
-            bg_rect.topleft = (0, 0)
-        else:
-            window.fill("Light Blue")
-            tempText = text_font.render("Level failed", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(400, 80)))
-            tempText = text_font.render("Main menu", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(200, 200)))
-            tempText = text_font.render("Restart Level", True, "Black")
-            window.blit(tempText, tempText.get_rect(center=(600, 200)))
-
 
 def l10():
     global ID, l10C
@@ -880,6 +892,7 @@ def end_credits():
     if Buttons.space:
         ID = -1
         platform_rect.topleft = (0, 0)
+        buttonPress.play()
     tempText = text_font.render("Thank you for playing", True, "Pink")
     window.blit(tempText, tempText.get_rect(midtop=(400, platform_rect.y/2+stop+25)))
     tempText = text_font.render("Press space to return to menu", True, "Pink")
@@ -888,7 +901,7 @@ def end_credits():
 
 # The main play function,take cares of which levels or menus are open
 def play():
-    global loop1, ID, temp, speed, jumpSpeed, fireTime, destructPlatform, grass
+    global loop1, ID, temp, speed, jumpSpeed, fireTime, destructPlatform, grass, killPlatform
 
     # Grass
     if grass > 3:
@@ -950,12 +963,16 @@ def play():
                 bullet_rect.x += 6
         player_rect.y -= speed
         if speed != 0:
-            speed -= 1
+            if ID in [3]:
+                speed -= 0.25
+            else:
+                speed -= 1
         if Buttons.w and Gear.l9ce:
             speed = jumpSpeed/2
 
+        # Use weapons
         if Buttons.space:
-            if time.time()-fireTime > 1:
+            if time.time()-fireTime > 3:
                 if pygame.mouse.get_pos()[0] <= player_rect.x:
                     Shoot.left = True
                     Shoot.right = False
@@ -974,7 +991,7 @@ def play():
     if ID == -2:
         settings()
     if ID == -1:
-        menu()
+        menu(True)
     elif ID == 0:
         intro()
     elif ID == 1:
@@ -1000,14 +1017,75 @@ def play():
     elif ID == 11:
         end_credits()
 
-    # Platforms that gets destroyed and platforms that kill
-    if ID in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] and temp == 0:
+    # When the level is over, check if the player wants the next level or the menu
+    if temp == 1:
+        if Buttons.mouse:
+            buttonPress.play()
+            if pygame.mouse.get_pos()[0] <= screen[0]/2:
+                ID = -1
+            else:
+                ID += 1
+                destructPlatform = []
+                killPlatform = []
+                menu(False)
+            temp = 0
+            player_rect.bottomleft = (50, 0)
+            platform_rect.topleft = (0, 0)
+            bg_rect.topleft = (-50, 0)
+        # Graphics
+        else:
+            window.fill("Light Blue")
+            tempText = text_font.render("Level "+str(ID)+" Complete!", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 80)))
+            tempText = text_font.render("Main menu", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(200, 200)))
+            tempText = text_font.render("Next Level", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(600, 200)))
+
+    # Restart level or return to menu after loss
+    elif temp == 2:
+        if Buttons.mouse:
+            buttonPress.play()
+            if pygame.mouse.get_pos()[0] <= screen[0]/2:
+                ID = -1
+                destructPlatform = []
+                killPlatform = []
+            # Spawn destructible platforms
+            menu(False)
+            temp = 0
+            player_rect.bottomleft = (50, 0)
+            platform_rect.topleft = (0, 0)
+            bg_rect.topleft = (0, 0)
+        # Graphics
+        else:
+            window.fill("Light Blue")
+            tempText = text_font.render("Level failed", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(400, 80)))
+            tempText = text_font.render("Main menu", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(200, 200)))
+            tempText = text_font.render("Restart Level", True, "Black")
+            window.blit(tempText, tempText.get_rect(center=(600, 200)))
+
+    elif ID in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] and temp == 0:
+        # Back to menu button
+        back_rect = back.get_rect(center=(200, 50))
+        window.blit(back, back_rect)
+        if Buttons.mouse and back_rect.collidepoint(pygame.mouse.get_pos()):
+            buttonPress.play()
+            ID = -1
+            destructPlatform = []
+            killPlatform = []
+            player_rect.bottomleft = (50, 0)
+            platform_rect.topleft = (0, 0)
+            bg_rect.topleft = (0, 0)
+
+        # Firing and destructible platforms
         fire()
-        for i in destructPlatform:
-            window.blit(platform, (platform_rect.x+i[0], platform_rect.y+i[1]+8))
         for i in killPlatform:
             window.blit(platformD, (platform_rect.x+i[0], platform_rect.y+i[1]))
-
+        for i in destructPlatform:
+            if ID == 2:
+                window.blit(platform2cracked, (platform_rect.x+i[0], platform_rect.y+i[1]+8))
         for i in destructPlatform:
             if platform.get_rect(topleft=(platform_rect.x+i[0], platform_rect.y+i[1])).clipline((player_rect.bottomleft[0]+24, player_rect.bottomleft[1]), (player_rect.bottomright[0]-24, player_rect.bottomright[1])):
                 player_rect.bottom = platform_rect.y+i[1]
@@ -1031,7 +1109,8 @@ toBeSaved = {"introC": introC, "l1C": l1C, "l2C": l2C,
              "l9c": l9c, "l10c": l10c, "jump": jump, "l1ce": Gear.l1ce,
              "l2ce": Gear.l2ce, "l3ce": Gear.l3ce, "l4ce": Gear.l4ce,
              "l5ce": Gear.l5ce, "l6ce": Gear.l6ce, "l7ce": Gear.l7ce,
-             "l8ce": Gear.l8ce, "l9ce": Gear.l9ce, "l10ce": Gear.l10ce, "musicVolume": musicVolume}
+             "l8ce": Gear.l8ce, "l9ce": Gear.l9ce, "l10ce": Gear.l10ce,
+             "musicVolume": musicVolume, "sfxVolume": sfxVolume, "buttonVolume": buttonVolume}
 print(toBeSaved)
 save_object(toBeSaved)
 sys.exit()
